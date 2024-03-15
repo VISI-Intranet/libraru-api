@@ -16,3 +16,9 @@ case class UserUpdate(name:Option[String],
                       phoneNumber:Option[String],
                       booksBorrowed:Option[List[String]]
                )
+
+
+case class PrepareUser(
+                        password: String,
+                        booksBorrowed: List[String]
+                      )

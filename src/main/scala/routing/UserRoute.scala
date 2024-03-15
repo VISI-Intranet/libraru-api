@@ -3,10 +3,11 @@ package routing
 import akka.http.scaladsl.model.StatusCodes
 import akka.http.scaladsl.server.Directives._
 import akka.http.scaladsl.server.Route
+import akka.http.scaladsl.unmarshalling.{FromEntityUnmarshaller, Unmarshaller}
 import domain._
 import repositories.{BookRepository, UserRepository, getFields}
 
-import scala.concurrent.ExecutionContext
+import scala.concurrent.{ExecutionContext, Future}
 import scala.util.{Failure, Success}
 
 class UserRoute(implicit val userRepo: UserRepository, val bookRepo:BookRepository, val ex:ExecutionContext)
@@ -14,6 +15,7 @@ class UserRoute(implicit val userRepo: UserRepository, val bookRepo:BookReposito
 
   // field параметрінің дұрыстығын тексеру үшін
   private val fields: Set[String] = getFields(classOf[User],"_id")
+
 
   val route: Route = pathPrefix("users") {
     pathEndOrSingleSlash {
@@ -93,4 +95,4 @@ class UserRoute(implicit val userRepo: UserRepository, val bookRepo:BookReposito
           }
       }
   }
-}
+  }

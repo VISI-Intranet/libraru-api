@@ -23,11 +23,15 @@ object Main extends App with JsonSupport {
   private val userRoute = new UserRoute()
   private val authorRoute = new AuthorRoute()
   private val bookRoute = new BookRoute()
+  private val goodUserRoutes = GoodUserRoutes()
 
   // Добавление путей
   private val allRoutes = userRoute.route ~
     authorRoute.route ~
-    bookRoute.route
+    bookRoute.route ~
+    goodUserRoutes.route
+
+
 
   // Старт сервера
   private val bindingFuture = Http().bindAndHandle(allRoutes, "localhost", 8080)

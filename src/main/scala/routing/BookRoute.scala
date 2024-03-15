@@ -42,23 +42,18 @@ class BookRoute(implicit val bookRepo: BookRepository, val authorRepo:AuthorRepo
           entity(as[Book]) {
             newBook => {
               val authorId = newBook match {
-                case tb:TextBook => tb.author
-                case fb:FictionBook => fb.author
-                case sb:ScientificBook => sb.author
+                case tb: TextBook => tb.author
+                case fb: FictionBook => fb.author
+                case sb: ScientificBook => sb.author
               }
-              onComplete(authorRepo.doesAuthorExist(Some(authorId))) {
-                case Success(true)=>
-                  onComplete(bookRepo.addBook(newBook)) {
-                    case Success(newBookId) =>
-                      bookRepo.addBookToAuthor(authorId,newBookId)
-                      complete(StatusCodes.Created, s"ID новой книги: $newBookId")
-                    case Failure(ex) =>
-                      complete(StatusCodes.InternalServerError, s"Не удалось добавить книгу: ${ex.getMessage}")
-                  }
-                case Success(false) =>
-                  complete(StatusCodes.BadRequest, s"Не правильный айди автора")
+              onComplete(bookRepo.addBook(newBook)) {
+                case Success(newBookId) =>
+                  bookRepo.addBookToAuthor(authorId, newBookId)
+                  complete(StatusCodes.Created, s"ID новой книги: $newBookId")
                 case Failure(ex) =>
-                  complete(StatusCodes.InternalServerError, s"Ошибка при проверке книги: ${ex.getMessage}")
+                  complete(StatusCodes.InternalServerError, s"Не удалось добавить книгу: ${ex.getMessage}")
+
+
               }
             }
           }
@@ -74,17 +69,11 @@ class BookRoute(implicit val bookRepo: BookRepository, val authorRepo:AuthorRepo
         } ~
           put {
             entity(as[BookUpdate]) { updatedBook => {
-              onComplete(authorRepo.doesAuthorExist(updatedBook.author)) {
-                case Success(true) =>
                   onComplete(bookRepo.updateBook(bookId, updatedBook)) {
                     case Success(updatedBookMessage) => complete(StatusCodes.OK,s"$updatedBookMessage")
                     case Failure(ex) => complete(StatusCodes.InternalServerError, s"Ошибка в коде: ${ex.getMessage}")
                   }
-                case Success(false) =>
-                  complete(StatusCodes.BadRequest, s"Не правильный айди автора")
-                case Failure(ex) =>
-                  complete(StatusCodes.InternalServerError, s"Ошибка при проверке книги: ${ex.getMessage}")
-              }
+
             }
             }
           } ~

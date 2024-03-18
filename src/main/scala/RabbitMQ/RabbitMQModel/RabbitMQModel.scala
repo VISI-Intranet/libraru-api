@@ -1,8 +1,7 @@
 package RabbitMQ.RabbitMQModel
 
 case class RabbitMQModel(
-                          queueName: String="",
-                          exchangeName: String="",
-                          routingKeyName: String
-                        )
-
+                             queueName: String="",
+                             exchangeName: String="",
+                             routingKeyName: String
+                           )

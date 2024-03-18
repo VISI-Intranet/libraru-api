@@ -1,11 +1,10 @@
 package repositories
 
 import RabbitMQ.RabbitMQModel.RabbitMQModel
-import RabbitMQ.RabbitMQOperation.RabbitMQConsumer.RabbitMQConsumer.subscription
+import RabbitMQ.RabbitMQOperation.Operations.Subscription
 import RabbitMQ.RabbitMQTemple.CreateUserCommand
 import akka.stream.Materializer
 import akka.stream.alpakka.amqp.{AmqpConnectionProvider, AmqpLocalConnectionProvider}
-import com.rabbitmq.client.ConnectionFactory
 import org.mongodb.scala.MongoDatabase
 import org.mongodb.scala.bson.collection.immutable.Document
 import org.mongodb.scala.model.Filters._
@@ -55,49 +54,7 @@ class UserRepository(implicit db:MongoDatabase) {
     }
   }
 
-  val m = RabbitMQModel("TeacherPublisher", "UniverSystem", "create-user-command")
-  def addOrUpdateUserFromPrepareData(user: PrepareUser)(implicit mat: Materializer , ec: ExecutionContext): Future[String] = {
-    val connectionProvider: AmqpConnectionProvider = AmqpLocalConnectionProvider
 
-    val futureResult: Future[CreateUserCommand] = subscription(connectionProvider, m)
-
-    futureResult.flatMap { a =>
-      val userDocument = Document(
-        "_id" -> a._id,
-        "name" -> a.name,
-        "age" -> a.age,
-        "email" -> a.email,
-        "password" -> user.password,
-        "phoneNumber" -> a.phoneNumber,
-        "typeUser" -> a.userType,
-        "booksBorrowed" -> user.booksBorrowed
-      )
-
-      val filter = equal("_id", a._id)
-
-      collection.find(filter).toFuture().flatMap { existingUser =>
-        if (existingUser.isEmpty) {
-
-          collection.insertOne(userDocument).toFuture().map { result =>
-            if (result.wasAcknowledged()) {
-              s"Пользователь успешно добавлен в базу данных с идентификатором: ${a._id}"
-            } else {
-              "Ошибка при добавлении пользователя в базу данных"
-            }
-          }
-        } else {
-          val update = collection.replaceOne(filter, userDocument).toFuture().map { result =>
-            if (result.wasAcknowledged()) {
-              s"Пользователь успешно обновлен в базе данных с идентификатором: ${a._id}"
-            } else {
-              "Ошибка при обновлении пользователя в базе данных"
-            }
-          }
-          update
-        }
-      }
-    }
-  }
 
   // Update
   def updateUser(userId: String, updatedUser: UserUpdate)(implicit ec: ExecutionContext): Future[String] = {

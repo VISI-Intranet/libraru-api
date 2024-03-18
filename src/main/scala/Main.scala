@@ -1,3 +1,6 @@
+
+import RabbitMQ.RabbitMQModel.RabbitMQModel
+import RabbitMQ.RabbitMQOperation.OtherOperations.CustomSubscription.customSubscription
 import akka.actor.ActorSystem
 import akka.http.scaladsl.Http
 import akka.http.scaladsl.server.Directives._
@@ -23,15 +26,15 @@ object Main extends App with JsonSupport {
   private val userRoute = new UserRoute()
   private val authorRoute = new AuthorRoute()
   private val bookRoute = new BookRoute()
-  private val goodUserRoutes = GoodUserRoutes()
+
 
   // Добавление путей
   private val allRoutes = userRoute.route ~
     authorRoute.route ~
-    bookRoute.route ~
-    goodUserRoutes.route
+    bookRoute.route
 
-
+  val mqModel = RabbitMQModel("TeacherPublisher","UniverSystem","univer.teacher-api.createUserPost")
+  customSubscription(mqModel);
 
   // Старт сервера
   private val bindingFuture = Http().bindAndHandle(allRoutes, "localhost", 8080)

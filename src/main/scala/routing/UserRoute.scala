@@ -39,20 +39,11 @@ class UserRoute(implicit val userRepo: UserRepository, val bookRepo:BookReposito
       } ~
         post {
           entity(as[User]) { newUser => {
-            val bookIds = newUser.booksBorrowed
-            onComplete(bookRepo.checkBooksExist(bookIds)) {
-              case Success(true) =>
-                // Все книги существуют, продолжаем создание пользователя
-                onComplete(userRepo.addUser(newUser)) {
-                  case Success(newUserId) =>
-                    complete(StatusCodes.Created, s"ID нового пользователя $newUserId")
-                  case Failure(ex) =>
-                    complete(StatusCodes.InternalServerError, s"Не удалось создать пользователя: ${ex.getMessage}")
-                }
-              case Success(false) =>
-                complete(StatusCodes.BadRequest, "Одна или несколько книг в списке не существуют в базе данных")
+            onComplete(userRepo.addUser(newUser)) {
+              case Success(newUserId) =>
+                complete(StatusCodes.Created, s"ID нового пользователя $newUserId")
               case Failure(ex) =>
-                complete(StatusCodes.InternalServerError, s"Ошибка при проверке книг: ${ex.getMessage}")
+                complete(StatusCodes.InternalServerError, s"Не удалось создать пользователя: ${ex.getMessage}")
             }
           }
           }
@@ -68,18 +59,10 @@ class UserRoute(implicit val userRepo: UserRepository, val bookRepo:BookReposito
         } ~
           put {
             entity(as[UserUpdate]) { updatedUser => {
-              val bookIds = updatedUser.booksBorrowed.getOrElse(List.empty)
-              onComplete(bookRepo.checkBooksExist(bookIds)) {
-                case Success(true) =>
-                  onComplete(userRepo.updateUser(userId, updatedUser)) {
-                    case Success(updatedUserId) =>
-                      complete(StatusCodes.OK, updatedUserId)
-                    case Failure(ex) => complete(StatusCodes.NotFound, s"Ошибка в коде: ${ex.getMessage}")
-                  }
-                case Success(false) =>
-                  complete(StatusCodes.BadRequest, "Одна или несколько книг в списке не существуют в базе данных")
-                case Failure(ex) =>
-                  complete(StatusCodes.InternalServerError, s"Ошибка при проверке книг: ${ex.getMessage}")
+              onComplete(userRepo.updateUser(userId, updatedUser)) {
+                case Success(updatedUserId) =>
+                  complete(StatusCodes.OK, updatedUserId)
+                case Failure(ex) => complete(StatusCodes.NotFound, s"Ошибка в коде: ${ex.getMessage}")
               }
             }
             }

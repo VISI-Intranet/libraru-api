@@ -20,12 +20,12 @@ object Main extends App with JsonSupport {
   implicit val executionContext: ExecutionContextExecutor = system.dispatcher
 
   // Создание актора для брокера сообщений
-  val amqpActor = system.actorOf(Props(new AmqpActor("X:routing.topic", serviceName)), "amqpActor")
+  val amqpActor = system.actorOf(Props(new AmqpActor("UniverSystem", serviceName)), "amqpActor")
 
   // Обявить актора слушателя
   amqpActor ! RabbitMQ.DeclareListener(
     queue = "library_api_queue",
-    bind_routing_key = "univer.petition_api.#",
+    bind_routing_key = "univer.library_api.#",
     actorName = "consumer_actor_1",
     handle = new RabbitMQ_Consumer().handle)
 
@@ -46,7 +46,7 @@ object Main extends App with JsonSupport {
     bookRoute.route
 
   // Старт сервера
-  private val bindingFuture = Http().bindAndHandle(allRoutes, "localhost", 8080)
+  private val bindingFuture = Http().bindAndHandle(allRoutes, "localhost", 8082)
   println(s"Server online at http://localhost:8080/")
 
   // Остановка сервера при завершении приложения

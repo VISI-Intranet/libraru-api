@@ -17,4 +17,7 @@ libraryDependencies += "com.typesafe.akka" %% "akka-http-spray-json" % "10.5.0"
 libraryDependencies += "com.typesafe.akka" %% "akka-http" % "10.5.0"
 libraryDependencies += "com.typesafe.akka" %% "akka-stream" % "2.8.0"
 libraryDependencies += "com.rabbitmq" % "amqp-client" % "5.16.0"
+libraryDependencies +="org.json4s" %% "json4s-native" % "3.6.11"
+libraryDependencies +="org.json4s" %% "json4s-jackson" % "3.6.11"
+libraryDependencies +="com.typesafe.play" %% "play-json" % "2.9.2"
 

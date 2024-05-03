@@ -69,8 +69,8 @@ class UserRoute(implicit val userRepo: UserRepository, val bookRepo:BookReposito
           } ~
           delete {
             onComplete(userRepo.deleteUser(userId)) {
-              case Success(deletedUserId) =>
-                complete(StatusCodes.OK, s"ID удаленного пользователя: $deletedUserId")
+              case Success(true) => complete(StatusCodes.OK, s"Пользователь по айди $userId удален!")
+              case Success(false) => complete(StatusCodes.OK, s"Пользователя по айди $userId не существует!!")
               case Failure(ex) => complete(StatusCodes.NotFound, s"Ошибка в коде: ${ex.getMessage}")
             }
           }

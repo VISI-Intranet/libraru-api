@@ -28,52 +28,52 @@ class AuthorRoute(implicit val authorRepo: AuthorRepository,val bookRepo:BookRep
           }
         }
       } ~
-        get {
-          onComplete(authorRepo.getAllAuthors()) {
-            case Success(result) => complete(StatusCodes.OK, result)
-            case Failure(ex) => complete(StatusCodes.InternalServerError, s"Ошибка в коде: ${ex.getMessage}")
+      get {
+        onComplete(authorRepo.getAllAuthors()) {
+          case Success(result) => complete(StatusCodes.OK, result)
+          case Failure(ex) => complete(StatusCodes.InternalServerError, s"Ошибка в коде: ${ex.getMessage}")
+        }
+      } ~
+      post {
+        entity(as[Author]) { newAuthor =>
+          // Все книги существуют, продолжаем создание автора
+          onComplete(authorRepo.addAuthor(newAuthor)) {
+            case Success(newAuthorId) =>
+              complete(StatusCodes.Created, s"ID нового автора: $newAuthorId")
+            case Failure(ex) =>
+              complete(StatusCodes.InternalServerError, s"Не удалось создать автора: ${ex.getMessage}")
           }
-        } ~
-        post {
-          entity(as[Author]) { newAuthor =>
-            // Все книги существуют, продолжаем создание автора
-            onComplete(authorRepo.addAuthor(newAuthor)) {
-              case Success(newAuthorId) =>
-                complete(StatusCodes.Created, s"ID нового автора: $newAuthorId")
-              case Failure(ex) =>
-                complete(StatusCodes.InternalServerError, s"Не удалось создать автора: ${ex.getMessage}")
-            }
-          }
-        } ~
-        path(Segment) { authorId =>
-          get {
-            onComplete(authorRepo.getAuthorById(authorId)) {
-              case Success(Some(author)) => complete(StatusCodes.OK, author)
-              case Success(None) => complete(StatusCodes.NotFound, s"Автора под ID $authorId не существует!")
+        }
+      }
+    }~
+    path(Segment) { authorId =>
+      get {
+        onComplete(authorRepo.getAuthorById(authorId)) {
+          case Success(Some(author)) => complete(StatusCodes.OK, author)
+          case Success(None) => complete(StatusCodes.NotFound, s"Автора под ID $authorId не существует!")
+          case Failure(ex) =>
+            complete(StatusCodes.InternalServerError, s"Ошибка в коде: ${ex.getMessage}")
+        }
+      } ~
+      put {
+        entity(as[AuthorUpdate]) { updatedAuthor => {
+            onComplete(authorRepo.updateAuthor(authorId, updatedAuthor)) {
+              case Success(updatedAuthorId) =>
+                complete(StatusCodes.OK, updatedAuthorId)
               case Failure(ex) =>
                 complete(StatusCodes.InternalServerError, s"Ошибка в коде: ${ex.getMessage}")
             }
-          } ~
-            put {
-              entity(as[AuthorUpdate]) { updatedAuthor => {
-                onComplete(authorRepo.updateAuthor(authorId, updatedAuthor)) {
-                  case Success(updatedAuthorId) =>
-                    complete(StatusCodes.OK, updatedAuthorId)
-                  case Failure(ex) =>
-                    complete(StatusCodes.InternalServerError, s"Ошибка в коде: ${ex.getMessage}")
-                }
-              }
-              }
-            } ~
-            delete {
-              onComplete(authorRepo.deleteAuthor(authorId)) {
-                case Success(deletedAuthorId) =>
-                  complete(StatusCodes.OK, s"Число удаленных строк: $deletedAuthorId")
-                case Failure(ex) =>
-                  complete(StatusCodes.InternalServerError, s"Ошибка в коде: ${ex.getMessage}")
-              }
-            }
+          }
         }
+      } ~
+      delete {
+        onComplete(authorRepo.deleteAuthor(authorId)) {
+          case Success(true) => complete(StatusCodes.OK, s"Автор под айди $authorId удален!")
+          case Success(false) => complete(StatusCodes.OK, s"Автор под айди $authorId не существует!")
+          case Failure(ex) =>
+            complete(StatusCodes.InternalServerError, s"Ошибка в коде: ${ex.getMessage}")
+        }
+      }
     }
   }
 }

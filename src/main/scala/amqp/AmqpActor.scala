@@ -14,13 +14,15 @@ class AmqpActor(exchangeName: String,serviceName:String) extends Actor with Acto
 
     // Создаем соединение с RabbitMQ
     val factory = new ConnectionFactory()
-    factory.setHost("localhost")
+    factory.setHost("rabbitmq")
+//    factory.setHost("localhost")
     factory.setPort(5672)
     factory.setUsername("guest")
     factory.setPassword("guest")
     connection = factory.newConnection()
 
     channel = connection.createChannel()
+    channel.exchangeDeclare(exchangeName,"topic")
     log.info("Соединение с RabbitMQ установлено")
 
     senderActor = context.actorOf(SenderActor.props(channel,exchangeName), "sender")

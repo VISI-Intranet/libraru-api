@@ -42,8 +42,8 @@ class UserRepository(implicit db:MongoDatabase) {
     )
 
     collection.insertOne(document).toFuture().map { result: InsertOneResult =>
-      val insertedId = result.getInsertedId
-      s"Пользователь успешно добавлен с идентификатором: $insertedId"
+      val insertedId = result.getInsertedId.asObjectId().getValue
+      s"$insertedId"
     }
   }
 
@@ -67,10 +67,17 @@ class UserRepository(implicit db:MongoDatabase) {
   }
 
   // Delete
-  def deleteUser(userId: String)(implicit ec: ExecutionContext): Future[String] = {
+  def deleteUser(userId: String)(implicit ec: ExecutionContext): Future[Boolean] = {
     val objectId = new ObjectId(userId)
-    collection.deleteOne(equal("_id", objectId)).toFuture().map(_ => "Пользователь успешно удален")
+    collection.deleteOne(equal("_id", objectId)).toFuture().map { deleteResult =>
+      if (deleteResult.wasAcknowledged() && deleteResult.getDeletedCount > 0) {
+        true // Пользователь успешно удален
+      } else {
+        false // Пользователь не был удален
+      }
+    }
   }
+
 
   // To convert MongoDB document to User
   private def docToUser(doc: Document): Option[User] = {

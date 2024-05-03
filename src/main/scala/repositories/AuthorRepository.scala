@@ -5,8 +5,7 @@ import org.mongodb.scala.bson.collection.immutable.Document
 import org.mongodb.scala.model.Filters._
 import org.mongodb.scala.result.InsertOneResult
 
-import scala.concurrent.{Await, ExecutionContext, Future}
-import scala.concurrent.duration._
+import scala.concurrent.{ExecutionContext, Future}
 import domain.{Author, AuthorUpdate}
 import org.mongodb.scala.bson.{BsonArray, BsonDocument, BsonInt32, BsonString, ObjectId}
 
@@ -35,7 +34,7 @@ class AuthorRepository(implicit db:MongoDatabase) {
 
   // Проверка
   def doesAuthorExist(authorId:Option[String])(implicit ec: ExecutionContext): Future[Boolean] = {
-    if(authorId != None) {
+    if(authorId.isDefined) {
       val objectId = new ObjectId(authorId.get)
       collection.find(equal("_id", objectId)).headOption().map(_.isDefined)
     }else Future{true}
@@ -52,8 +51,8 @@ class AuthorRepository(implicit db:MongoDatabase) {
     )
 
     collection.insertOne(document).toFuture().map { result: InsertOneResult =>
-      val insertedId = result.getInsertedId
-      s"Автор успешно добавлен с идентификатором: $insertedId"
+      val insertedId = result.getInsertedId.asObjectId().getValue
+      s"$insertedId"
     }
   }
 
@@ -76,10 +75,17 @@ class AuthorRepository(implicit db:MongoDatabase) {
         }
     }
   }
+
   // Delete
-  def deleteAuthor(authorId: String)(implicit ec: ExecutionContext): Future[String] = {
+  def deleteAuthor(authorId: String)(implicit ec: ExecutionContext): Future[Boolean] = {
     val objectId = new ObjectId(authorId)
-    collection.deleteOne(equal("_id", objectId)).toFuture().map(_ => "Автор успешно удален")
+    collection.deleteOne(equal("_id", objectId)).toFuture().map{deleteResult =>
+      if (deleteResult.wasAcknowledged() && deleteResult.getDeletedCount > 0) {
+        true
+      } else {
+        false
+      }
+    }
   }
 
 
@@ -104,7 +110,6 @@ class AuthorRepository(implicit db:MongoDatabase) {
       val updatedDocumentFuture: Future[BsonDocument] = oldAuthorFuture.flatMap {
         case Some(oldAuthor) =>
           val updatedDocument = oldAuthor.toDocumentForUpdate(authorUpdate)
-          println("Бисонға айналып қайтты")
           Future.successful(updatedDocument)
 
         case None =>

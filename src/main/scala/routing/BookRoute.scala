@@ -41,14 +41,15 @@ class BookRoute(implicit val bookRepo: BookRepository, val authorRepo:AuthorRepo
         post {
           entity(as[Book]) {
             newBook => {
-              val authorId = newBook match {
-                case tb:TextBook => tb.author
-                case fb:FictionBook => fb.author
-                case sb:ScientificBook => sb.author
-              }
+//              val authorId = newBook match {
+//                case tb:TextBook => tb.author
+//                case fb:FictionBook => fb.author
+//                case sb:ScientificBook => sb.author
+//              }
                 onComplete(bookRepo.addBook(newBook)) {
                   case Success(newBookId) =>
-                    bookRepo.addBookToAuthor(authorId,newBookId)
+                    // Тут книгу добавляет к автору но для упращения тестировки взято на коментарий
+                    // bookRepo.addBookToAuthor(authorId,newBookId)
                     complete(StatusCodes.Created, s"ID новой книги: $newBookId")
                   case Failure(ex) =>
                     complete(StatusCodes.InternalServerError, s"Не удалось добавить книгу: ${ex.getMessage}")
@@ -57,30 +58,30 @@ class BookRoute(implicit val bookRepo: BookRepository, val authorRepo:AuthorRepo
           }
         }
     } ~
-      path(Segment) { bookId =>
-        get {
-          onComplete(bookRepo.getBookById(bookId)) {
-            case Success(Some(book)) => complete(StatusCodes.OK, book)
-            case Success(None) => complete(StatusCodes.NotFound, s"Книги под ID $bookId не существует!")
+    path(Segment) { bookId =>
+      get {
+        onComplete(bookRepo.getBookById(bookId)) {
+          case Success(Some(book)) => complete(StatusCodes.OK, book)
+          case Success(None) => complete(StatusCodes.NotFound, s"Книги под ID $bookId не существует!")
+          case Failure(ex) => complete(StatusCodes.InternalServerError, s"Ошибка в коде: ${ex.getMessage}")
+        }
+      } ~
+      put {
+        entity(as[BookUpdate]) { updatedBook => {
+          onComplete(bookRepo.updateBook(bookId, updatedBook)) {
+            case Success(updatedBookMessage) => complete(StatusCodes.OK,s"$updatedBookMessage")
             case Failure(ex) => complete(StatusCodes.InternalServerError, s"Ошибка в коде: ${ex.getMessage}")
           }
-        } ~
-          put {
-            entity(as[BookUpdate]) { updatedBook => {
-              onComplete(bookRepo.updateBook(bookId, updatedBook)) {
-                case Success(updatedBookMessage) => complete(StatusCodes.OK,s"$updatedBookMessage")
-                case Failure(ex) => complete(StatusCodes.InternalServerError, s"Ошибка в коде: ${ex.getMessage}")
-              }
-            }
-            }
-          } ~
-          delete {
-            onComplete(bookRepo.deleteBook(bookId)) {
-              case Success(deletedBookId) =>
-                complete(StatusCodes.OK, s"Число удаленных строк: $deletedBookId")
-              case Failure(ex) => complete(StatusCodes.InternalServerError, s"Ошибка в коде: ${ex.getMessage}")
-            }
-          }
+        }
+        }
+      } ~
+      delete {
+        onComplete(bookRepo.deleteBook(bookId)) {
+          case Success(true) => complete(StatusCodes.OK, s"Книга по айди $bookId удалена!")
+          case Success(false) => complete(StatusCodes.OK, s"Книга по айди $bookId не существует!")
+          case Failure(ex) => complete(StatusCodes.InternalServerError, s"Ошибка в коде: ${ex.getMessage}")
+        }
       }
+    }
   }
 }

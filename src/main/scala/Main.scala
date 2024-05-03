@@ -18,6 +18,9 @@ object Main extends App with JsonSupport {
   // Создание акторной системы
   implicit val system: ActorSystem = ActorSystem(serviceName)
   implicit val executionContext: ExecutionContextExecutor = system.dispatcher
+    private val mongodbClient = MongoClient("mongodb://root:root@mongodb:27017")
+  //private val mongodbClient = MongoClient("mongodb://localhost:27017")
+  implicit val db: MongoDatabase = mongodbClient.getDatabase("library")
 
   // Создание актора для брокера сообщений
   val amqpActor = system.actorOf(Props(new AmqpActor("X:routing.topic", serviceName)), "amqpActor")
@@ -25,12 +28,10 @@ object Main extends App with JsonSupport {
   // Обявить актора слушателя
   amqpActor ! RabbitMQ.DeclareListener(
     queue = "library_api_queue",
-    bind_routing_key = "univer.petition_api.#",
+    bind_routing_key = "univer.library_api.#",
     actorName = "consumer_actor_1",
     handle = new RabbitMQ_Consumer().handle)
 
-  private val mongodbClient = MongoClient()
-  implicit val db: MongoDatabase = mongodbClient.getDatabase("library")
 
   implicit val userRepository: UserRepository = new UserRepository()
   implicit val authorRepository: AuthorRepository = new AuthorRepository()
@@ -46,8 +47,8 @@ object Main extends App with JsonSupport {
     bookRoute.route
 
   // Старт сервера
-  private val bindingFuture = Http().bindAndHandle(allRoutes, "localhost", 8080)
-  println(s"Server online at http://localhost:8080/")
+  private val bindingFuture = Http().bindAndHandle(allRoutes, "0.0.0.0", 8080)
+  println(s"Server online at http://0.0.0.0:8080/")
 
   // Остановка сервера при завершении приложения
   sys.addShutdownHook {

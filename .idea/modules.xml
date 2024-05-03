@@ -2,8 +2,8 @@
 <project version="4">
   <component name="ProjectModuleManager">
     <modules>
-      <module fileurl="file://$PROJECT_DIR$/.idea/modules/Library.iml" filepath="$PROJECT_DIR$/.idea/modules/Library.iml" />
-      <module fileurl="file://$PROJECT_DIR$/.idea/modules/Library-build.iml" filepath="$PROJECT_DIR$/.idea/modules/Library-build.iml" />
+      <module fileurl="file://$PROJECT_DIR$/.idea/modules/library_api.iml" filepath="$PROJECT_DIR$/.idea/modules/library_api.iml" />
+      <module fileurl="file://$PROJECT_DIR$/.idea/modules/library_api.library_api-build.iml" filepath="$PROJECT_DIR$/.idea/modules/library_api.library_api-build.iml" />
     </modules>
   </component>
 </project>

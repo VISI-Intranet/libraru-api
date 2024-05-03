@@ -58,14 +58,21 @@ class BookRepository(implicit db: MongoDatabase) {
     }
 
     collection.insertOne(document).toFuture().map { result: InsertOneResult =>
-      val insertedId = result.getInsertedId
-      s"Книга успешно добавлена с идентификатором: $insertedId"
+      val insertedId = result.getInsertedId.asObjectId().getValue
+      s"$insertedId"
     }
   }
 
-  def deleteBook(bookId: String)(implicit ec: ExecutionContext): Future[String] = {
+  // Delete
+  def deleteBook(bookId: String)(implicit ec: ExecutionContext): Future[Boolean] = {
     val objectId = new org.bson.types.ObjectId(bookId)
-    collection.deleteOne(equal("_id", objectId)).toFuture().map(_ =>  "Книга успешно удалена")
+    collection.deleteOne(equal("_id", objectId)).toFuture().map{deleteResult =>
+      if (deleteResult.wasAcknowledged() && deleteResult.getDeletedCount > 0) {
+        true
+      } else {
+        false
+      }
+    }
   }
 
   def updateBook(bookId: String, updatedBook: BookUpdate)(implicit ec: ExecutionContext): Future[String] = {

@@ -47,7 +47,7 @@ object Main extends App with JsonSupport {
     bookRoute.route
 
   // Старт сервера
-  private val bindingFuture = Http().bindAndHandle(allRoutes, "0.0.0.0", 8080)
+  private val bindingFuture = Http().newServerAt("0.0.0.0", 8080).bind(allRoutes)
   println(s"Server online at http://0.0.0.0:8080/")
 
   // Остановка сервера при завершении приложения
